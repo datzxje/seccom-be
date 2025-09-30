@@ -6,9 +6,16 @@ import {
   Param,
   HttpCode,
   HttpStatus,
+  UseGuards,
+  Request,
+  ForbiddenException,
 } from '@nestjs/common';
 import { RegistrationService } from './registration.service';
 import { CreateRegistrationDto } from './dto/create-registration.dto';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../common/guards/roles.guard';
+import { Roles } from '../common/decorators/roles.decorator';
+import { Role } from '../common/enums/role.enum';
 
 @Controller('registration')
 export class RegistrationController {
@@ -27,6 +34,8 @@ export class RegistrationController {
     };
   }
 
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN)
   @Get()
   async findAll() {
     const registrations = await this.registrationService.findAll();
@@ -37,6 +46,8 @@ export class RegistrationController {
     };
   }
 
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN)
   @Get('statistics')
   async getStatistics() {
     const stats = await this.registrationService.getStatistics();
@@ -46,8 +57,9 @@ export class RegistrationController {
     };
   }
 
+  @UseGuards(JwtAuthGuard)
   @Get(':id')
-  async findOne(@Param('id') id: string) {
+  async findOne(@Param('id') id: string, @Request() req) {
     const registration = await this.registrationService.findOne(id);
     if (!registration) {
       return {
@@ -55,6 +67,12 @@ export class RegistrationController {
         message: 'Không tìm thấy đăng ký',
       };
     }
+
+    // Only allow users to view their own registration or admin to view any
+    if (req.user.role !== Role.ADMIN && req.user.userId !== id) {
+      throw new ForbiddenException('Bạn không có quyền xem thông tin này');
+    }
+
     return {
       success: true,
       data: registration,

@@ -4,6 +4,7 @@ import {
   Column,
   CreateDateColumn,
 } from 'typeorm';
+import { Role } from '../../common/enums/role.enum';
 
 @Entity('registrations')
 export class Registration {
@@ -42,6 +43,25 @@ export class Registration {
 
   @Column({ name: 'facebook_link', nullable: true })
   facebookLink?: string;
+
+  @Column({ unique: true })
+  username: string;
+
+  @Column()
+  password: string;
+
+  @Column({ name: 'email_sent', default: false })
+  emailSent: boolean;
+
+  @Column({ name: 'refresh_token', nullable: true })
+  refreshToken: string;
+
+  @Column({
+    type: 'enum',
+    enum: Role,
+    default: Role.USER,
+  })
+  role: Role;
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
