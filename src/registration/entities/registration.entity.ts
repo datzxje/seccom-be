@@ -53,8 +53,8 @@ export class Registration {
   @Column({ name: 'email_sent', default: false })
   emailSent: boolean;
 
-  @Column({ name: 'refresh_token', nullable: true })
-  refreshToken: string;
+  @Column({ name: 'refresh_token', type: 'varchar', nullable: true })
+  refreshToken: string | null;
 
   @Column({
     type: 'enum',

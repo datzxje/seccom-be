@@ -2,6 +2,7 @@ import { Injectable, ConflictException, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
+import * as ExcelJS from 'exceljs';
 import { CreateRegistrationDto } from './dto/create-registration.dto';
 import { Registration } from './entities/registration.entity';
 import { EmailService } from './email.service';
@@ -168,5 +169,68 @@ export class RegistrationService {
     });
 
     return await this.registrationRepository.save(admin);
+  }
+
+  async exportUsersToExcel(): Promise<Buffer> {
+    // Get all users (not admins)
+    const users = await this.registrationRepository.find({
+      where: { role: Role.USER },
+      order: { createdAt: 'ASC' },
+    });
+
+    // Create workbook and worksheet
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet('Danh sách thí sinh');
+
+    // Define columns
+    worksheet.columns = [
+      { header: 'STT', key: 'stt', width: 5 },
+      { header: 'Họ và tên', key: 'fullName', width: 25 },
+      { header: 'Ngày sinh', key: 'dateOfBirth', width: 12 },
+      { header: 'Email', key: 'email', width: 30 },
+      { header: 'Số điện thoại', key: 'phoneNumber', width: 15 },
+      { header: 'Trường', key: 'university', width: 40 },
+      { header: 'Trường khác', key: 'otherUniversity', width: 30 },
+      { header: 'Mã SV', key: 'studentId', width: 15 },
+      { header: 'Ngành', key: 'major', width: 30 },
+      { header: 'Lớp', key: 'className', width: 15 },
+      { header: 'Năm học', key: 'yearOfStudy', width: 10 },
+      { header: 'Facebook', key: 'facebookLink', width: 40 },
+      { header: 'Username', key: 'username', width: 20 },
+      { header: 'Ngày đăng ký', key: 'createdAt', width: 20 },
+    ];
+
+    // Style header row
+    worksheet.getRow(1).font = { bold: true };
+    worksheet.getRow(1).fill = {
+      type: 'pattern',
+      pattern: 'solid',
+      fgColor: { argb: 'FFD3D3D3' },
+    };
+    worksheet.getRow(1).alignment = { vertical: 'middle', horizontal: 'center' };
+
+    // Add data rows
+    users.forEach((user, index) => {
+      worksheet.addRow({
+        stt: index + 1,
+        fullName: user.fullName,
+        dateOfBirth: user.dateOfBirth,
+        email: user.email,
+        phoneNumber: user.phoneNumber,
+        university: user.university,
+        otherUniversity: user.otherUniversity || '',
+        studentId: user.studentId || '',
+        major: user.major || '',
+        className: user.className || '',
+        yearOfStudy: user.yearOfStudy || '',
+        facebookLink: user.facebookLink || '',
+        username: user.username,
+        createdAt: user.createdAt.toISOString().split('T')[0],
+      });
+    });
+
+    // Generate buffer
+    const buffer = await workbook.xlsx.writeBuffer();
+    return Buffer.from(buffer);
   }
 }

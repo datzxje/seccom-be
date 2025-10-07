@@ -92,14 +92,14 @@ export class AuthService {
         { sub: userId, username, role },
         {
           secret: this.configService.get<string>('JWT_SECRET'),
-          expiresIn: this.configService.get<string>('JWT_ACCESS_TOKEN_EXPIRATION'),
+          expiresIn: this.configService.get<string>('JWT_EXPIRATION'),
         },
       ),
       this.jwtService.signAsync(
         { sub: userId, username, role },
         {
           secret: this.configService.get<string>('JWT_SECRET'),
-          expiresIn: this.configService.get<string>('JWT_REFRESH_TOKEN_EXPIRATION'),
+          expiresIn: this.configService.get<string>('JWT_REFRESH_EXPIRATION'),
         },
       ),
     ]);
