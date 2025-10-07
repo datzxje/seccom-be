@@ -4,6 +4,10 @@
 
 ### 1. Clone repository
 
+```bash
+git clone https://github.com/datzxje/seccom-be.git
+```
+
 ### 2. Cấu hình môi trường
 
 Copy file `.env.example` thành `.env` và cập nhật các giá trị:
