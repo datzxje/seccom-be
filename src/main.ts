@@ -1,10 +1,12 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
+import { TransformInterceptor } from './common/interceptors/transform.interceptor';
+import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  
+
   // Enable validation globally
   app.useGlobalPipes(
     new ValidationPipe({
@@ -13,6 +15,12 @@ async function bootstrap() {
       transform: true,
     }),
   );
+
+  // Apply global response transformer
+  app.useGlobalInterceptors(new TransformInterceptor());
+
+  // Apply global exception filter
+  app.useGlobalFilters(new HttpExceptionFilter());
 
   // Enable CORS for frontend
   app.enableCors();

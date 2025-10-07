@@ -9,7 +9,9 @@ import {
   UseGuards,
   Request,
   ForbiddenException,
+  Res,
 } from '@nestjs/common';
+import type { Response } from 'express';
 import { RegistrationService } from './registration.service';
 import { CreateRegistrationDto } from './dto/create-registration.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -55,6 +57,22 @@ export class RegistrationController {
       success: true,
       data: stats,
     };
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN)
+  @Get('export/excel')
+  async exportToExcel(@Res() res: Response) {
+    const buffer = await this.registrationService.exportUsersToExcel();
+
+    const filename = `danh-sach-thi-sinh-${new Date().toISOString().split('T')[0]}.xlsx`;
+
+    res.setHeader(
+      'Content-Type',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    );
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    res.send(buffer);
   }
 
   @UseGuards(JwtAuthGuard)

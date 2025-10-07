@@ -6,6 +6,13 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { RegistrationModule } from './registration/registration.module';
 import { AuthModule } from './auth/auth.module';
+import { QuestionModule } from './question/question.module';
+import { ExamModule } from './exam/exam.module';
+import { Registration } from './registration/entities/registration.entity';
+import { Question } from './question/entities/question.entity';
+import { Answer } from './question/entities/answer.entity';
+import { ExamSession } from './exam/entities/exam-session.entity';
+import { ExamAnswer } from './exam/entities/exam-answer.entity';
 
 @Module({
   imports: [
@@ -22,7 +29,7 @@ import { AuthModule } from './auth/auth.module';
         username: configService.get('DB_USERNAME'),
         password: configService.get('DB_PASSWORD'),
         database: configService.get('DB_DATABASE'),
-        entities: [__dirname + '/**/*.entity{.ts,.js}'],
+        entities: [Registration, Question, Answer, ExamSession, ExamAnswer],
         synchronize: configService.get('NODE_ENV') === 'development',
         logging: configService.get('NODE_ENV') === 'development',
       }),
@@ -48,6 +55,8 @@ import { AuthModule } from './auth/auth.module';
     }),
     RegistrationModule,
     AuthModule,
+    QuestionModule,
+    ExamModule,
   ],
   controllers: [AppController],
   providers: [AppService],
