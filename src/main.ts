@@ -23,7 +23,12 @@ async function bootstrap() {
   app.useGlobalFilters(new HttpExceptionFilter());
 
   // Enable CORS for frontend
-  app.enableCors();
+  app.enableCors({
+    origin: process.env.FRONTEND_URL || '*', // Allow specific origin or all
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
+    credentials: true,
+    allowedHeaders: 'Content-Type, Accept, Authorization',
+  });
 
   await app.listen(process.env.PORT ?? 3000);
 }

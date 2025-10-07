@@ -171,6 +171,16 @@ export class RegistrationService {
     return await this.registrationRepository.save(admin);
   }
 
+  async selectExamSlot(userId: string, examSlot: string): Promise<Registration> {
+    const user = await this.registrationRepository.findOne({ where: { id: userId } });
+    if (!user) {
+      throw new ConflictException('Người dùng không tồn tại');
+    }
+
+    user.examSlot = examSlot as any;
+    return await this.registrationRepository.save(user);
+  }
+
   async exportUsersToExcel(): Promise<Buffer> {
     // Get all users (not admins)
     const users = await this.registrationRepository.find({
@@ -197,6 +207,7 @@ export class RegistrationService {
       { header: 'Năm học', key: 'yearOfStudy', width: 10 },
       { header: 'Facebook', key: 'facebookLink', width: 40 },
       { header: 'Username', key: 'username', width: 20 },
+      { header: 'Ca thi', key: 'examSlot', width: 45 },
       { header: 'Ngày đăng ký', key: 'createdAt', width: 20 },
     ];
 
@@ -225,6 +236,7 @@ export class RegistrationService {
         yearOfStudy: user.yearOfStudy || '',
         facebookLink: user.facebookLink || '',
         username: user.username,
+        examSlot: user.examSlot || '',
         createdAt: user.createdAt.toISOString().split('T')[0],
       });
     });

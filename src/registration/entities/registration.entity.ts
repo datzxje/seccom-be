@@ -5,6 +5,7 @@ import {
   CreateDateColumn,
 } from 'typeorm';
 import { Role } from '../../common/enums/role.enum';
+import { ExamSlot } from '../../common/enums/exam-slot.enum';
 
 @Entity('registrations')
 export class Registration {
@@ -62,6 +63,14 @@ export class Registration {
     default: Role.USER,
   })
   role: Role;
+
+  @Column({
+    name: 'exam_slot',
+    type: 'enum',
+    enum: ExamSlot,
+    nullable: true,
+  })
+  examSlot?: ExamSlot;
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;

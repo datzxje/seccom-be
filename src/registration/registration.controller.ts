@@ -14,6 +14,7 @@ import {
 import type { Response } from 'express';
 import { RegistrationService } from './registration.service';
 import { CreateRegistrationDto } from './dto/create-registration.dto';
+import { SelectExamSlotDto } from './dto/select-exam-slot.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
@@ -73,6 +74,22 @@ export class RegistrationController {
     );
     res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
     res.send(buffer);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('select-exam-slot')
+  async selectExamSlot(@Request() req, @Body() selectExamSlotDto: SelectExamSlotDto) {
+    const user = await this.registrationService.selectExamSlot(
+      req.user.userId,
+      selectExamSlotDto.examSlot,
+    );
+    return {
+      success: true,
+      message: 'Chọn ca thi thành công',
+      data: {
+        examSlot: user.examSlot,
+      },
+    };
   }
 
   @UseGuards(JwtAuthGuard)
