@@ -12,6 +12,8 @@ import { SubmitExamDto } from './dto/submit-exam.dto';
 
 @Injectable()
 export class ExamService {
+  private readonly EXAM_DURATION_MINUTES = 20;
+
   constructor(
     @InjectRepository(ExamSession)
     private examSessionRepository: Repository<ExamSession>,
@@ -38,6 +40,17 @@ export class ExamService {
     });
 
     if (existingSession) {
+      // Check if session has expired (more than 20 minutes)
+      const now = new Date();
+      const sessionStart = new Date(existingSession.startTime);
+      const elapsedMinutes = (now.getTime() - sessionStart.getTime()) / (1000 * 60);
+
+      if (elapsedMinutes > this.EXAM_DURATION_MINUTES) {
+        // Auto-submit with current answers (or empty if no answers)
+        await this.autoSubmitExpiredSession(existingSession);
+        throw new BadRequestException('Phiên thi của bạn đã hết hạn (quá 20 phút). Bài thi đã được tự động nộp.');
+      }
+
       // Return existing session with same questions
       const questions = await this.questionRepository
         .createQueryBuilder('question')
@@ -139,6 +152,15 @@ export class ExamService {
 
     if (session.status === ExamStatus.COMPLETED) {
       throw new BadRequestException('Bài thi đã được nộp trước đó');
+    }
+
+    // Check if session has expired (more than 20 minutes)
+    const now = new Date();
+    const sessionStart = new Date(session.startTime);
+    const elapsedMinutes = (now.getTime() - sessionStart.getTime()) / (1000 * 60);
+
+    if (elapsedMinutes > this.EXAM_DURATION_MINUTES) {
+      throw new BadRequestException('Phiên thi đã hết hạn (quá 20 phút). Không thể nộp bài.');
     }
 
     // Grade exam
@@ -250,5 +272,48 @@ export class ExamService {
         isCorrect: a.isCorrect,
       })),
     };
+  }
+
+  /**
+   * Auto-submit expired session (after 20 minutes)
+   * Grade only the answers that were submitted before expiration
+   */
+  private async autoSubmitExpiredSession(session: ExamSession): Promise<void> {
+    // Get all answers submitted for this session
+    const submittedAnswers = await this.examAnswerRepository.find({
+      where: { examSessionId: session.id },
+    });
+
+    let correctCount = 0;
+
+    // Grade only submitted answers
+    for (const examAnswer of submittedAnswers) {
+      const question = await this.questionRepository.findOne({
+        where: { id: examAnswer.questionId },
+        relations: ['answers'],
+      });
+
+      if (question) {
+        const correctAnswer = question.answers.find((a) => a.isCorrect);
+        const isCorrect = examAnswer.selectedAnswerId === correctAnswer?.id;
+
+        // Update answer correctness
+        examAnswer.isCorrect = isCorrect;
+        if (isCorrect) correctCount++;
+
+        await this.examAnswerRepository.save(examAnswer);
+      }
+    }
+
+    // Calculate score based on submitted answers
+    const score = (correctCount / session.totalQuestions) * 100;
+
+    // Update session
+    session.correctAnswers = correctCount;
+    session.score = score;
+    session.status = ExamStatus.COMPLETED;
+    session.endTime = new Date();
+
+    await this.examSessionRepository.save(session);
   }
 }
