@@ -177,6 +177,11 @@ export class RegistrationService {
       throw new ConflictException('Người dùng không tồn tại');
     }
 
+    // Check if user already selected an exam slot
+    if (user.examSlot) {
+      throw new ConflictException('Bạn đã chọn ca thi rồi, không thể thay đổi');
+    }
+
     user.examSlot = examSlot as any;
     return await this.registrationRepository.save(user);
   }

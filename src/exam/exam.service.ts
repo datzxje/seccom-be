@@ -22,6 +22,15 @@ export class ExamService {
   ) {}
 
   async startExam(userId: string) {
+    // Check if user already completed an exam
+    const completedSession = await this.examSessionRepository.findOne({
+      where: { userId, status: ExamStatus.COMPLETED },
+    });
+
+    if (completedSession) {
+      throw new BadRequestException('Bạn đã hoàn thành bài thi rồi, không thể thi lại');
+    }
+
     // Check if user has an existing IN_PROGRESS session
     const existingSession = await this.examSessionRepository.findOne({
       where: { userId, status: ExamStatus.IN_PROGRESS },
@@ -52,24 +61,24 @@ export class ExamService {
       return {
         sessionId: existingSession.id,
         questions: questionsWithoutCorrectFlag,
-        totalQuestions: 40,
+        totalQuestions: 20,
         startTime: existingSession.startTime,
         isResumed: true,
       };
     }
 
-    // Get 40 random active question IDs first
+    // Get 20 random active question IDs first
     const randomQuestionIds = await this.questionRepository
       .createQueryBuilder('question')
       .select('question.id')
       .where('question.isActive = :isActive', { isActive: true })
       .orderBy('RANDOM()')
-      .limit(40)
+      .limit(20)
       .getRawMany();
 
-    if (randomQuestionIds.length < 40) {
+    if (randomQuestionIds.length < 20) {
       throw new BadRequestException(
-        `Không đủ 40 câu hỏi active. Hiện có ${randomQuestionIds.length} câu.`,
+        `Không đủ 20 câu hỏi active. Hiện có ${randomQuestionIds.length} câu.`,
       );
     }
 
@@ -87,7 +96,7 @@ export class ExamService {
     const session = this.examSessionRepository.create({
       userId,
       startTime: new Date(),
-      totalQuestions: 40,
+      totalQuestions: 20,
       status: ExamStatus.IN_PROGRESS,
       questionIds,
     });
@@ -110,7 +119,7 @@ export class ExamService {
     return {
       sessionId: savedSession.id,
       questions: questionsWithoutCorrectFlag,
-      totalQuestions: 40,
+      totalQuestions: 20,
       startTime: savedSession.startTime,
       isResumed: false,
     };
