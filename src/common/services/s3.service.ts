@@ -21,13 +21,21 @@ export class S3Service {
 
     const accessKeyId = this.configService.get<string>('AWS_ACCESS_KEY_ID') || '';
     const secretAccessKey = this.configService.get<string>('AWS_SECRET_ACCESS_KEY') || '';
+    const sessionToken = this.configService.get<string>('AWS_SESSION_TOKEN');
+
+    const credentials: any = {
+      accessKeyId,
+      secretAccessKey,
+    };
+
+    // Add session token if using temporary credentials
+    if (sessionToken) {
+      credentials.sessionToken = sessionToken;
+    }
 
     this.s3Client = new S3Client({
       region: this.region,
-      credentials: {
-        accessKeyId,
-        secretAccessKey,
-      },
+      credentials,
     });
   }
 
