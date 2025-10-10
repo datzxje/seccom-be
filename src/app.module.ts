@@ -56,20 +56,23 @@ import { ExamAnswer } from './exam/entities/exam-answer.entity';
     }),
     MailerModule.forRootAsync({
       imports: [ConfigModule],
-      useFactory: (configService: ConfigService) => ({
-        transport: {
-          host: configService.get('MAIL_HOST'),
-          port: +configService.get('MAIL_PORT'),
-          secure: false,
-          auth: {
-            user: configService.get('MAIL_USER'),
-            pass: configService.get('MAIL_PASSWORD'),
+      useFactory: (configService: ConfigService) => {
+        const mailPort = +configService.get('MAIL_PORT');
+        return {
+          transport: {
+            host: configService.get('MAIL_HOST'),
+            port: mailPort,
+            secure: mailPort === 465, // true for 465, false for other ports (587, 25)
+            auth: {
+              user: configService.get('MAIL_USER'),
+              pass: configService.get('MAIL_PASSWORD'),
+            },
           },
-        },
-        defaults: {
-          from: configService.get('MAIL_FROM'),
-        },
-      }),
+          defaults: {
+            from: configService.get('MAIL_FROM'),
+          },
+        };
+      },
       inject: [ConfigService],
     }),
     RegistrationModule,
