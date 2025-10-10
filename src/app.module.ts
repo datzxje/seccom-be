@@ -22,17 +22,36 @@ import { ExamAnswer } from './exam/entities/exam-answer.entity';
     }),
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
-      useFactory: (configService: ConfigService) => ({
-        type: 'postgres',
-        host: configService.get('DB_HOST'),
-        port: +configService.get('DB_PORT'),
-        username: configService.get('DB_USERNAME'),
-        password: configService.get('DB_PASSWORD'),
-        database: configService.get('DB_DATABASE'),
-        entities: [Registration, Question, Answer, ExamSession, ExamAnswer],
-        synchronize: configService.get('NODE_ENV') === 'development',
-        logging: configService.get('NODE_ENV') === 'development',
-      }),
+      useFactory: (configService: ConfigService) => {
+        const databaseUrl = configService.get('DATABASE_URL');
+        const isProduction = configService.get('NODE_ENV') === 'production';
+
+        // Railway provides DATABASE_URL
+        if (databaseUrl) {
+          return {
+            type: 'postgres',
+            url: databaseUrl,
+            entities: [Registration, Question, Answer, ExamSession, ExamAnswer],
+            synchronize: !isProduction,
+            logging: !isProduction,
+            ssl: isProduction ? { rejectUnauthorized: false } : false,
+          };
+        }
+
+        // Fallback to individual env vars (local development)
+        return {
+          type: 'postgres',
+          host: configService.get('DB_HOST'),
+          port: +configService.get('DB_PORT'),
+          username: configService.get('DB_USERNAME'),
+          password: configService.get('DB_PASSWORD'),
+          database: configService.get('DB_DATABASE'),
+          entities: [Registration, Question, Answer, ExamSession, ExamAnswer],
+          synchronize: !isProduction,
+          logging: !isProduction,
+          ssl: isProduction ? { rejectUnauthorized: false } : false,
+        };
+      },
       inject: [ConfigService],
     }),
     MailerModule.forRootAsync({

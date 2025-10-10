@@ -9,7 +9,7 @@ import { Question } from './entities/question.entity';
 import { Answer } from './entities/answer.entity';
 import { CreateQuestionDto } from './dto/create-question.dto';
 import { UpdateQuestionDto } from './dto/update-question.dto';
-import { S3Service } from '../common/services/s3.service';
+import { CloudinaryService } from '../common/services/cloudinary.service';
 
 @Injectable()
 export class QuestionService {
@@ -18,7 +18,7 @@ export class QuestionService {
     private questionRepository: Repository<Question>,
     @InjectRepository(Answer)
     private answerRepository: Repository<Answer>,
-    private s3Service: S3Service,
+    private cloudinaryService: CloudinaryService,
   ) {}
 
   async create(createQuestionDto: CreateQuestionDto): Promise<Question> {
@@ -135,10 +135,10 @@ export class QuestionService {
   async remove(id: string): Promise<void> {
     const question = await this.findOne(id);
 
-    // Delete images from S3 if they exist
+    // Delete images from Cloudinary if they exist
     if (question.imageUrl) {
       try {
-        await this.s3Service.deleteFile(question.imageUrl);
+        await this.cloudinaryService.deleteFile(question.imageUrl);
       } catch (error) {
         console.error('Failed to delete question image:', error);
       }
@@ -148,7 +148,7 @@ export class QuestionService {
     for (const answer of question.answers) {
       if (answer.imageUrl) {
         try {
-          await this.s3Service.deleteFile(answer.imageUrl);
+          await this.cloudinaryService.deleteFile(answer.imageUrl);
         } catch (error) {
           console.error('Failed to delete answer image:', error);
         }
@@ -159,6 +159,6 @@ export class QuestionService {
   }
 
   async uploadImage(file: Express.Multer.File): Promise<string> {
-    return this.s3Service.uploadFile(file, 'questions');
+    return this.cloudinaryService.uploadFile(file, 'questions');
   }
 }
