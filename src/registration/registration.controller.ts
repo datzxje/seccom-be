@@ -13,6 +13,7 @@ import {
 } from '@nestjs/common';
 import type { Response } from 'express';
 import { RegistrationService } from './registration.service';
+import { EmailService } from './email.service';
 import { CreateRegistrationDto } from './dto/create-registration.dto';
 import { SelectExamSlotDto } from './dto/select-exam-slot.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -22,7 +23,10 @@ import { Role } from '../common/enums/role.enum';
 
 @Controller('registration')
 export class RegistrationController {
-  constructor(private readonly registrationService: RegistrationService) {}
+  constructor(
+    private readonly registrationService: RegistrationService,
+    private readonly emailService: EmailService,
+  ) {}
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
@@ -112,5 +116,33 @@ export class RegistrationController {
       success: true,
       data: registration,
     };
+  }
+
+  @Post('test-email')
+  @HttpCode(HttpStatus.OK)
+  async testEmail(@Body() body: { email: string }) {
+    try {
+      const mockRegistration = {
+        fullName: 'Test User',
+        username: 'testuser',
+        email: body.email,
+      } as any;
+
+      const result = await this.emailService.sendRegistrationEmail(
+        mockRegistration,
+        'TestPassword123',
+      );
+
+      return {
+        success: result,
+        message: result ? 'Email sent successfully' : 'Failed to send email',
+      };
+    } catch (error) {
+      return {
+        success: false,
+        message: 'Error sending email',
+        error: error.message,
+      };
+    }
   }
 }
