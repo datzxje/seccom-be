@@ -58,18 +58,32 @@ import { ExamAnswer } from './exam/entities/exam-answer.entity';
       imports: [ConfigModule],
       useFactory: (configService: ConfigService) => {
         const mailPort = +configService.get('MAIL_PORT');
+        const mailHost = configService.get('MAIL_HOST');
+        const mailUser = configService.get('MAIL_USER');
+        const mailPassword = configService.get('MAIL_PASSWORD');
+        const mailFrom = configService.get('MAIL_FROM');
+
+        // Debug log
+        console.log('📧 Email Config Debug:');
+        console.log('MAIL_HOST:', mailHost);
+        console.log('MAIL_PORT:', mailPort);
+        console.log('MAIL_USER:', mailUser);
+        console.log('MAIL_PASSWORD:', mailPassword ? `${mailPassword.substring(0, 10)}...` : 'NOT SET');
+        console.log('MAIL_FROM:', mailFrom);
+        console.log('Secure:', mailPort === 465);
+
         return {
           transport: {
-            host: configService.get('MAIL_HOST'),
+            host: mailHost,
             port: mailPort,
             secure: mailPort === 465, // true for 465, false for other ports (587, 25)
             auth: {
-              user: configService.get('MAIL_USER'),
-              pass: configService.get('MAIL_PASSWORD'),
+              user: mailUser,
+              pass: mailPassword,
             },
           },
           defaults: {
-            from: configService.get('MAIL_FROM'),
+            from: mailFrom,
           },
         };
       },
