@@ -1,7 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { MailerModule } from '@nestjs-modules/mailer';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { RegistrationModule } from './registration/registration.module';
@@ -50,41 +49,6 @@ import { ExamAnswer } from './exam/entities/exam-answer.entity';
           synchronize: !isProduction,
           logging: !isProduction,
           ssl: isProduction ? { rejectUnauthorized: false } : false,
-        };
-      },
-      inject: [ConfigService],
-    }),
-    MailerModule.forRootAsync({
-      imports: [ConfigModule],
-      useFactory: (configService: ConfigService) => {
-        const mailPort = +configService.get('MAIL_PORT');
-        const mailHost = configService.get('MAIL_HOST');
-        const mailUser = configService.get('MAIL_USER');
-        const mailPassword = configService.get('MAIL_PASSWORD');
-        const mailFrom = configService.get('MAIL_FROM');
-
-        // Debug log
-        console.log('📧 Email Config Debug:');
-        console.log('MAIL_HOST:', mailHost);
-        console.log('MAIL_PORT:', mailPort);
-        console.log('MAIL_USER:', mailUser);
-        console.log('MAIL_PASSWORD:', mailPassword ? `${mailPassword.substring(0, 10)}...` : 'NOT SET');
-        console.log('MAIL_FROM:', mailFrom);
-        console.log('Secure:', mailPort === 465);
-
-        return {
-          transport: {
-            host: mailHost,
-            port: mailPort,
-            secure: mailPort === 465, // true for 465, false for other ports (587, 25)
-            auth: {
-              user: mailUser,
-              pass: mailPassword,
-            },
-          },
-          defaults: {
-            from: mailFrom,
-          },
         };
       },
       inject: [ConfigService],
