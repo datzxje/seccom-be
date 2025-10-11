@@ -118,31 +118,4 @@ export class RegistrationController {
     };
   }
 
-  @Post('test-email')
-  @HttpCode(HttpStatus.OK)
-  async testEmail(@Body() body: { email: string }) {
-    try {
-      const mockRegistration = {
-        fullName: 'Test User',
-        username: 'testuser',
-        email: body.email,
-      } as any;
-
-      const result = await this.resendEmailService.sendRegistrationEmail(
-        mockRegistration,
-        'TestPassword123',
-      );
-
-      return {
-        success: result,
-        message: result ? 'Email sent successfully' : 'Failed to send email',
-      };
-    } catch (error) {
-      return {
-        success: false,
-        message: 'Error sending email',
-        error: error.message,
-      };
-    }
-  }
 }
