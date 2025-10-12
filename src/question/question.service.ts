@@ -49,18 +49,68 @@ export class QuestionService {
     return this.findOne(savedQuestion.id);
   }
 
-  async findAll(includeInactive: boolean = false): Promise<Question[]> {
-    const query = this.questionRepository
-      .createQueryBuilder('question')
-      .leftJoinAndSelect('question.answers', 'answers')
-      .orderBy('question.createdAt', 'DESC')
-      .addOrderBy('answers.order', 'ASC');
+  async findAll(
+    includeInactive: boolean = false,
+    page: number = 1,
+    limit: number = 10,
+  ): Promise<{
+    data: Question[];
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  }> {
+    // Count total questions without joins
+    const countQuery = this.questionRepository
+      .createQueryBuilder('question');
 
     if (!includeInactive) {
-      query.where('question.isActive = :isActive', { isActive: true });
+      countQuery.where('question.isActive = :isActive', { isActive: true });
     }
 
-    return query.getMany();
+    const total = await countQuery.getCount();
+
+    // First, get question IDs with pagination (no joins)
+    const idsQuery = this.questionRepository
+      .createQueryBuilder('question')
+      .select('question.id')
+      .orderBy('question.createdAt', 'DESC');
+
+    if (!includeInactive) {
+      idsQuery.where('question.isActive = :isActive', { isActive: true });
+    }
+
+    const skip = (page - 1) * limit;
+    idsQuery.skip(skip).take(limit);
+
+    const questionIds = (await idsQuery.getMany()).map(q => q.id);
+
+    // Then get full questions with answers using the IDs
+    if (questionIds.length === 0) {
+      return {
+        data: [],
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+      };
+    }
+
+    const data = await this.questionRepository
+      .createQueryBuilder('question')
+      .leftJoinAndSelect('question.answers', 'answers')
+      .whereInIds(questionIds)
+      .orderBy('question.createdAt', 'DESC')
+      .addOrderBy('answers.order', 'ASC')
+      .getMany();
+
+    return {
+      data,
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+    };
   }
 
   async findRandomActive(limit: number = 40): Promise<Question[]> {

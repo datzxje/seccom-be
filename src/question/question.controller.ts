@@ -55,9 +55,15 @@ export class QuestionController {
   }
 
   @Get()
-  findAll(@Query('includeInactive') includeInactive?: string) {
+  findAll(
+    @Query('includeInactive') includeInactive?: string,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+  ) {
     const shouldIncludeInactive = includeInactive === 'true';
-    return this.questionService.findAll(shouldIncludeInactive);
+    const pageNumber = page ? parseInt(page, 10) : 1;
+    const pageLimit = limit ? parseInt(limit, 10) : 10;
+    return this.questionService.findAll(shouldIncludeInactive, pageNumber, pageLimit);
   }
 
   @Get('random/active')

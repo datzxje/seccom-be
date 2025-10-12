@@ -26,8 +26,12 @@ export class TransformInterceptor<T>
           return data;
         }
 
+        // Check if data has pagination metadata
+        const hasPagination = data && typeof data === 'object' &&
+          'data' in data && 'total' in data && 'page' in data;
+
         // Transform to standard format
-        return {
+        const response: any = {
           success: true,
           statusCode,
           message: data?.message || 'Success',
@@ -35,6 +39,18 @@ export class TransformInterceptor<T>
           timestamp: new Date().toISOString(),
           path: request.url,
         };
+
+        // Preserve pagination metadata if present
+        if (hasPagination) {
+          response.meta = {
+            total: data.total,
+            page: data.page,
+            limit: data.limit,
+            totalPages: data.totalPages,
+          };
+        }
+
+        return response;
       }),
     );
   }

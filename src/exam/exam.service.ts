@@ -8,6 +8,7 @@ import { Repository } from 'typeorm';
 import { ExamSession, ExamStatus } from './entities/exam-session.entity';
 import { ExamAnswer } from './entities/exam-answer.entity';
 import { Question } from '../question/entities/question.entity';
+import { QuestionSetService } from '../question/question-set.service';
 import { SubmitExamDto } from './dto/submit-exam.dto';
 
 @Injectable()
@@ -21,6 +22,7 @@ export class ExamService {
     private examAnswerRepository: Repository<ExamAnswer>,
     @InjectRepository(Question)
     private questionRepository: Repository<Question>,
+    private questionSetService: QuestionSetService,
   ) {}
 
   async startExam(userId: string) {
@@ -80,30 +82,26 @@ export class ExamService {
       };
     }
 
-    // Get 20 random active question IDs first
-    const randomQuestionIds = await this.questionRepository
-      .createQueryBuilder('question')
-      .select('question.id')
-      .where('question.isActive = :isActive', { isActive: true })
-      .orderBy('RANDOM()')
-      .limit(20)
-      .getRawMany();
+    // Get random active question set (bộ đề)
+    const randomQuestionSet = await this.questionSetService.findRandomActive();
 
-    if (randomQuestionIds.length < 20) {
+    if (!randomQuestionSet) {
       throw new BadRequestException(
-        `Không đủ 20 câu hỏi active. Hiện có ${randomQuestionIds.length} câu.`,
+        'Không có bộ đề nào đang hoạt động. Vui lòng liên hệ admin.',
       );
     }
 
-    const questionIds = randomQuestionIds.map((q) => q.question_id);
+    if (!randomQuestionSet.questions || randomQuestionSet.questions.length !== 20) {
+      const actualCount = randomQuestionSet.questions?.length || 0;
+      throw new BadRequestException(
+        `Bộ đề "${randomQuestionSet.name}" không hợp lệ (có ${actualCount} câu hỏi thay vì 20). Vui lòng liên hệ admin.`,
+      );
+    }
 
-    // Get full questions with answers
-    const questions = await this.questionRepository
-      .createQueryBuilder('question')
-      .leftJoinAndSelect('question.answers', 'answers')
-      .where('question.id IN (:...ids)', { ids: questionIds })
-      .orderBy('answers.order', 'ASC')
-      .getMany();
+    // Shuffle questions randomly
+    const questions = this.shuffleArray([...randomQuestionSet.questions]);
+
+    const questionIds = questions.map((q) => q.id);
 
     // Create exam session
     const session = this.examSessionRepository.create({
@@ -272,6 +270,18 @@ export class ExamService {
         isCorrect: a.isCorrect,
       })),
     };
+  }
+
+  /**
+   * Shuffle array using Fisher-Yates algorithm
+   */
+  private shuffleArray<T>(array: T[]): T[] {
+    const shuffled = [...array];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    return shuffled;
   }
 
   /**

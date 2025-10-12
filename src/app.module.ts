@@ -10,6 +10,7 @@ import { ExamModule } from './exam/exam.module';
 import { Registration } from './registration/entities/registration.entity';
 import { Question } from './question/entities/question.entity';
 import { Answer } from './question/entities/answer.entity';
+import { QuestionSet } from './question/entities/question-set.entity';
 import { ExamSession } from './exam/entities/exam-session.entity';
 import { ExamAnswer } from './exam/entities/exam-answer.entity';
 
@@ -30,7 +31,7 @@ import { ExamAnswer } from './exam/entities/exam-answer.entity';
           return {
             type: 'postgres',
             url: databaseUrl,
-            entities: [Registration, Question, Answer, ExamSession, ExamAnswer],
+            entities: [Registration, Question, Answer, QuestionSet, ExamSession, ExamAnswer],
             synchronize: !isProduction,
             logging: !isProduction,
             ssl: isProduction ? { rejectUnauthorized: false } : false,
@@ -45,7 +46,7 @@ import { ExamAnswer } from './exam/entities/exam-answer.entity';
           username: configService.get('DB_USERNAME'),
           password: configService.get('DB_PASSWORD'),
           database: configService.get('DB_DATABASE'),
-          entities: [Registration, Question, Answer, ExamSession, ExamAnswer],
+          entities: [Registration, Question, Answer, QuestionSet, ExamSession, ExamAnswer],
           synchronize: !isProduction,
           logging: !isProduction,
           ssl: isProduction ? { rejectUnauthorized: false } : false,
