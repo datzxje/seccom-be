@@ -13,7 +13,7 @@ import {
 } from '@nestjs/common';
 import type { Response } from 'express';
 import { RegistrationService } from './registration.service';
-import { ResendEmailService } from './resend-email.service';
+import { EmailService } from './email.service';
 import { CreateRegistrationDto } from './dto/create-registration.dto';
 import { SelectExamSlotDto } from './dto/select-exam-slot.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -25,7 +25,7 @@ import { Role } from '../common/enums/role.enum';
 export class RegistrationController {
   constructor(
     private readonly registrationService: RegistrationService,
-    private readonly resendEmailService: ResendEmailService,
+    private readonly emailService: EmailService,
   ) {}
 
   @Post()

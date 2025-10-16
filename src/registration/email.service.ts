@@ -1,22 +1,51 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { Resend } from 'resend';
+import * as nodemailer from 'nodemailer';
 import { Registration } from './entities/registration.entity';
 
 @Injectable()
-export class ResendEmailService {
-  private readonly logger = new Logger(ResendEmailService.name);
-  private readonly resend: Resend;
+export class EmailService {
+  private readonly logger = new Logger(EmailService.name);
+  private transporter: nodemailer.Transporter;
 
   constructor(private readonly configService: ConfigService) {
-    const apiKey = this.configService.get('RESEND_API_KEY');
+    this.initializeTransporter();
+  }
 
-    if (!apiKey) {
-      this.logger.warn('RESEND_API_KEY not configured. Email sending will fail.');
+  private initializeTransporter() {
+    const smtpHost = this.configService.get('SMTP_HOST');
+    const smtpPort = this.configService.get('SMTP_PORT');
+    const smtpUser = this.configService.get('SMTP_USER');
+    const smtpPassword = this.configService.get('SMTP_PASSWORD');
+
+    if (!smtpHost || !smtpUser || !smtpPassword) {
+      this.logger.warn(
+        'SMTP configuration not complete. Email sending will fail.',
+      );
+      return;
     }
 
-    this.resend = new Resend(apiKey);
-    this.logger.log('Resend Email Service initialized');
+    this.transporter = nodemailer.createTransport({
+      host: smtpHost,
+      port: parseInt(smtpPort, 10) || 587,
+      secure: parseInt(smtpPort, 10) === 465, // true for 465, false for other ports
+      auth: {
+        user: smtpUser,
+        pass: smtpPassword,
+      },
+      tls: {
+        rejectUnauthorized: false, // Accept self-signed certificates
+      },
+    });
+
+    // Verify connection configuration
+    this.transporter.verify((error, success) => {
+      if (error) {
+        this.logger.error('SMTP connection error:', error);
+      } else {
+        this.logger.log('SMTP Server is ready to send emails');
+      }
+    });
   }
 
   async sendRegistrationEmail(
@@ -24,7 +53,14 @@ export class ResendEmailService {
     plainPassword: string,
   ): Promise<boolean> {
     const appUrl = this.configService.get('APP_URL', 'https://seccom.com');
-    const fromEmail = this.configService.get('MAIL_FROM', 'onboarding@resend.dev');
+    const fromEmail = this.configService.get(
+      'MAIL_FROM',
+      'noreply@yourdomain.com',
+    );
+    const fromName = this.configService.get(
+      'MAIL_FROM_NAME',
+      'SEC - Cuộc thi Bản lĩnh Nhà đầu tư',
+    );
 
     const emailContent = this.buildEmailTemplate(
       registration.fullName,
@@ -36,19 +72,16 @@ export class ResendEmailService {
     try {
       this.logger.log(`Sending registration email to ${registration.email}`);
 
-      const { data, error } = await this.resend.emails.send({
-        from: fromEmail,
+      const info = await this.transporter.sendMail({
+        from: `"${fromName}" <${fromEmail}>`,
         to: registration.email,
         subject: '[Cuộc thi Bản lĩnh Nhà đầu tư 2025] Vòng 1 - Test online',
         html: emailContent,
       });
 
-      if (error) {
-        this.logger.error(`Failed to send email to ${registration.email}`, error);
-        return false;
-      }
-
-      this.logger.log(`Email sent successfully to ${registration.email}. ID: ${data?.id}`);
+      this.logger.log(
+        `Email sent successfully to ${registration.email}. Message ID: ${info.messageId}`,
+      );
       return true;
     } catch (error) {
       this.logger.error(

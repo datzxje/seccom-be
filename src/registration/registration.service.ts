@@ -5,7 +5,7 @@ import * as bcrypt from 'bcrypt';
 import * as ExcelJS from 'exceljs';
 import { CreateRegistrationDto } from './dto/create-registration.dto';
 import { Registration } from './entities/registration.entity';
-import { ResendEmailService } from './resend-email.service';
+import { EmailService } from './email.service';
 import { Role } from '../common/enums/role.enum';
 
 @Injectable()
@@ -15,7 +15,7 @@ export class RegistrationService {
   constructor(
     @InjectRepository(Registration)
     private readonly registrationRepository: Repository<Registration>,
-    private readonly resendEmailService: ResendEmailService,
+    private readonly emailService: EmailService,
   ) {}
 
   async create(
@@ -84,7 +84,7 @@ export class RegistrationService {
     plainPassword: string,
   ): Promise<void> {
     try {
-      const emailSent = await this.resendEmailService.sendRegistrationEmail(
+      const emailSent = await this.emailService.sendRegistrationEmail(
         registration,
         plainPassword,
       );
