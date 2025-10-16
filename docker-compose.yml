@@ -50,3 +50,7 @@ services:
 
 volumes:
   pgdata:
+
+networks:
+  seccom-network:
+    driver: bridge
