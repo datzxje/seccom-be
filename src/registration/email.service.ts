@@ -104,135 +104,118 @@ export class EmailService {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Đăng ký thành công - Cuộc thi Bản lĩnh Nhà đầu tư 2025</title>
+    <title>Thông tin đăng ký</title>
     <style>
         body {
-            font-family: "Times New Roman", Times, serif;
+            font-family: Arial, sans-serif;
             line-height: 1.6;
-            color: #000;
-            margin: 40px;
+            color: #333;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
         }
-        h2 {
+        .header {
+            background-color: #0066cc;
+            color: white;
+            padding: 20px;
             text-align: center;
-            color: #0066cc;
-            font-weight: bold;
+            margin-bottom: 20px;
         }
-        b {
-            font-weight: bold;
+        .content {
+            background-color: #f9f9f9;
+            padding: 30px;
+            border-radius: 5px;
         }
-        ul {
-            margin-top: 0;
+        .credentials {
+            background-color: #fff;
+            padding: 20px;
+            margin: 20px 0;
+            border-left: 4px solid #0066cc;
+        }
+            .btc-right {
+                text-align: right;
+                color: #0066cc;
+                font-weight: bold;
+            }
+        .important {
+            background-color: #fff3cd;
+            padding: 15px;
+            margin: 20px 0;
+            border-left: 4px solid #ffc107;
+        }
+        .footer {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #ddd;
+            font-size: 0.9em;
+            color: #666;
         }
         a {
             color: #0066cc;
-            text-decoration: none;
         }
         a:hover {
             text-decoration: underline;
         }
-        .footer {
-            background-color: rgb(33,65,89);
-            color: white;
-            text-align: center;
-            padding: 20px;
-            margin-top: 40px;
+        ul {
+            margin: 10px 0;
+            padding-left: 20px;
         }
-        .footer a {
-            color: #66b3ff;
+        li {
+            margin: 8px 0;
+
         }
-        .social-icons {
-            margin: 20px 0;
-        }
-        .social-icons a {
-            display: inline-block;
-            background-color: white;
-            border-radius: 50%;
-            width: 45px;
-            height: 45px;
-            margin: 0 10px;
-            line-height: 45px;
-            text-align: center;
-            transition: 0.3s;
-        }
-        .social-icons a:hover {
-            background-color: #d9d9d9;
-            transform: scale(1.05);
-        }
-        .social-icons img {
-            width: 24px;
-            vertical-align: middle;
-        }
-        .highlight {
-            font-weight: bold;
-        }
-        .right-align {
-      text-align: right;
-      color: #0066cc;
-      font-weight: bold;
-    }
+
     </style>
 </head>
 <body>
+    <div class="header">
+        <h2>Đăng ký thành công Vòng 1 - Test Online</h2>
+    </div>
 
-    <h2>ĐĂNG KÝ THÀNH CÔNG VÒNG 1 - TEST ONLINE</h2>
+    <div class="content">
+        <p>Thân gửi bạn <strong>${fullName}</strong>,</p>
 
-    <p><b><i>Thân gửi bạn <strong>${fullName}</strong>!</i></b></p>
-    <p>
-        BTC Cuộc thi <b>Bản lĩnh Nhà đầu tư 2025</b> chân thành cảm ơn bạn đã dành sự quan tâm và đăng ký tham gia 
-        <b>Cuộc thi Bản lĩnh Nhà đầu tư 2025</b>.
-    </p>
+        <p>CLB Chứng khoán Học viện Ngân hàng - SEC chân thành cảm ơn bạn đã dành sự quan tâm và đăng ký tham gia <strong>Cuộc thi Bản lĩnh Nhà đầu tư 2025</strong>.</p>
 
-    <p>BTC xin gửi bạn thông tin chi tiết để tham dự <b>Vòng 1 - Test Online:</b></p>
-    <ul>
-        <li><b>Tài khoản:</b> <strong>${username}</strong></li>
-        <li><b>Mật khẩu:</b> <strong>${password}</strong></li>
-    </ul>
+        <p>BTC xin gửi bạn thông tin chi tiết để tham dự <strong>Vòng 1 - Test Online</strong>:</p>
 
-    <p><b>Hướng dẫn trước khi làm bài:</b></p>
-    <ul>
-        <li>Bài thi gồm các câu hỏi trắc nghiệm kiểm tra kiến thức về lĩnh vực <b>Kinh tế - Tài chính - Chứng khoán, IQ,...</b> 
-            Ở mỗi câu hỏi, các thí sinh chỉ được lựa chọn <b>01 đáp án duy nhất.</b></li>
-        <li><b>Thời gian làm bài:</b> 20 phút.</li>
-        <li>Bạn vui lòng truy cập vào link <i><a href="${appUrl}">${appUrl}</a></i> để bắt đầu thi.</li>
-    </ul>
+        <div class="credentials">
+            <p><strong>· Tài khoản:</strong> ${username}</p>
+            <p><strong>· Mật khẩu:</strong> ${password}</p>
+        </div>
 
-    <p>Nếu có thắc mắc về <b>Vòng 1 Cuộc thi Bản lĩnh Nhà đầu tư 2025</b>, bạn vui lòng liên hệ Fanpage 
-        <a href="https://www.facebook.com/banlinhnhadautu.sec" target="_blank">https://www.facebook.com/banlinhnhadautu.sec</a> 
-        hoặc gửi mail về địa chỉ <a href="mailto:notify.blndt@gmail.com">notify.blndt@gmail.com</a> để BTC có thể giải đáp.
-    </p>
+        <h3>Hướng dẫn trước khi làm bài:</h3>
+        <ul>
+            <li>Bài thi gồm các câu hỏi trắc nghiệm kiểm tra kiến thức về lĩnh vực <strong>Kinh tế - Tài chính - Chứng khoán, IQ,...</strong> Ở mỗi câu hỏi, các thí sinh chỉ được lựa chọn <strong>01 đáp án duy nhất</strong>.</li>
+            <li>Thời gian làm bài: <strong>20 phút</strong>.</li>
+            <li>Bạn vui lòng truy cập vào link <a href="${appUrl}">${appUrl}</a> để bắt đầu thi.</li>
+        </ul>
 
-    <p>Cảm ơn bạn đã dành thời gian quan tâm đến cuộc thi và chúc bạn hoàn thành tốt bài thi của mình!</p>
+        <p>Nếu có thắc mắc về Vòng 1 Cuộc thi Bản lĩnh Nhà đầu tư 2025, bạn vui lòng liên hệ Fanpage <a href="https://www.facebook.com/banlinhnhadautu.sec">https://www.facebook.com/banlinhnhadautu.sec</a> hoặc gửi mail về địa chỉ <a href="mailto:notify.blndt@gmail.com">notify.blndt@gmail.com</a> để BTC có thể giải đáp.</p>
 
-    <p><b>LƯU Ý:</b><br>
-        Với mỗi IP máy tính, các bạn chỉ được dự thi <b>MỘT lần duy nhất!</b> Vì vậy, bạn hãy chuẩn bị đầy đủ kiến thức 
-        và đảm bảo kết nối đường truyền máy tính của mình thật ổn định để tránh những lỗi đáng tiếc có thể xảy ra!
-    </p>
+        <p><strong>Cảm ơn bạn đã dành thời gian quan tâm đến cuộc thi và chúc bạn hoàn thành tốt bài thi của mình!</strong></p>
 
-    <p><i><b>Trân trọng!</b></i></p>
+        <div class="important">
+            <h3>LƯU Ý:</h3>
+            <ul>
+                <li>Với mỗi <strong>IP máy tính</strong>, các bạn chỉ được dự thi <strong>MỘT lần duy nhất</strong>!</li>
+                <li>Vì vậy, bạn hãy chuẩn bị đầy đủ kiến thức và đảm bảo kết nối đường truyền máy tính của mình thật ổn định để tránh những lỗi đáng tiếc có thể xảy ra!</li>
+            </ul>
+        </div>
 
-    <p class="right-align"><b style="color:#0066cc;">BTC Cuộc thi Bản lĩnh Nhà đầu tư</b></p>
+        <p><strong>Trân trọng!</strong></p>
+        <p class="btc-right">BTC Cuộc thi Bản lĩnh Nhà đầu tư</p>
 
-    <div class="footer">
-        <div class="social-icons">
-           <a href="https://www.facebook.com/banlinhnhadautu.sec" target="_blank">
-                <img src="https://cdn-icons-png.flaticon.com/512/124/124010.png" alt="Facebook">
-            </a>
-            <a href="mailto:notify.blndt@gmail.com" title="Email">
-                <img src="https://cdn-icons-png.flaticon.com/512/732/732200.png" alt="Email">
-            </a>
-            <a href="https://www.youtube.com/@clbchungkhoansec-ba" target="_blank">
-                <img src="https://cdn-icons-png.flaticon.com/512/1384/1384060.png" alt="YouTube">
-            </a>
-        </div> </div>
-<p style="text-align:center;">
-            <b>Mọi chi tiết vui lòng liên hệ:</b><br>
-            <b>Fanpage CLB Chứng khoán Học viện Ngân hàng – SEC</b><br>
-            <a href="https://www.google.com/maps/place/12+Chùa+Bộc,+Kim+Liên,+Hà+Nội" target="_blank">12 Chùa Bộc, Kim Liên, Hà Nội</a><br>
-            <b>Hotline:</b> 0968 763 960 (Ms. Phương Anh)<br>
-            0332 178 886 (Mr. Bùi Thanh)
-        </p>
-   
-
+        <div class="footer">
+            <p><strong>Mọi chi tiết vui lòng liên hệ:</strong></p>
+            <ul>
+                <li>Fanpage CLB Chứng khoán Học viện Ngân hàng – SEC: <a href="https://www.facebook.com/sec.bav/">https://www.facebook.com/sec.bav/</a></li>
+                <li>Fanpage Cuộc thi: <a href="https://www.facebook.com/banlinhnhadautu.sec">https://www.facebook.com/banlinhnhadautu.sec</a></li>
+                <li>Email: <a href="mailto:notify.blndt@gmail.com">notify.blndt@gmail.com</a></li>
+                <li>Hotline: 0968 763 960 (Ms. Phuong Anh)</li>
+            </ul>
+        </div>
+    </div>
 </body>
 </html>
 
