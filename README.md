@@ -27,7 +27,7 @@ docker-compose up -d --build
 #### Dừng services:
 
 ```bash
-docker-compose down
+docker compose down
 ```
 
 #### Xem logs:
