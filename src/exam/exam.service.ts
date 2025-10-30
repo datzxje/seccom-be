@@ -13,7 +13,7 @@ import { SubmitExamDto } from './dto/submit-exam.dto';
 
 @Injectable()
 export class ExamService {
-  private readonly EXAM_DURATION_MINUTES = 20;
+  private readonly EXAM_DURATION_MINUTES = 30;
 
   constructor(
     @InjectRepository(ExamSession)
@@ -50,7 +50,7 @@ export class ExamService {
       if (elapsedMinutes > this.EXAM_DURATION_MINUTES) {
         // Auto-submit with current answers (or empty if no answers)
         await this.autoSubmitExpiredSession(existingSession);
-        throw new BadRequestException('Phiên thi của bạn đã hết hạn (quá 20 phút). Bài thi đã được tự động nộp.');
+        throw new BadRequestException('Phiên thi của bạn đã hết hạn (quá 30 phút). Bài thi đã được tự động nộp.');
       }
 
       // Return existing session with same questions
@@ -158,7 +158,7 @@ export class ExamService {
     const elapsedMinutes = (now.getTime() - sessionStart.getTime()) / (1000 * 60);
 
     if (elapsedMinutes > this.EXAM_DURATION_MINUTES) {
-      throw new BadRequestException('Phiên thi đã hết hạn (quá 20 phút). Không thể nộp bài.');
+      throw new BadRequestException('Phiên thi đã hết hạn (quá 30 phút). Không thể nộp bài.');
     }
 
     // Grade exam

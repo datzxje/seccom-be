@@ -23,10 +23,9 @@ export class AuthService {
     if (!registration) {
       throw new UnauthorizedException('Invalid credentials');
     }
-
     const isPasswordValid = await bcrypt.compare(password, registration.password);
     if (!isPasswordValid) {
-      throw new UnauthorizedException('Invalid credentials');
+      throw new UnauthorizedException('Sai tên đăng nhập hoặc mật khẩu');
     }
 
     const tokens = await this.generateTokens(registration.id, registration.username, registration.role);

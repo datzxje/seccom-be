@@ -187,7 +187,7 @@ export class EmailService {
         <h3>Hướng dẫn trước khi làm bài:</h3>
         <ul>
             <li>Bài thi gồm các câu hỏi trắc nghiệm kiểm tra kiến thức về lĩnh vực <strong>Kinh tế - Tài chính - Chứng khoán, IQ,...</strong> Ở mỗi câu hỏi, các thí sinh chỉ được lựa chọn <strong>01 đáp án duy nhất</strong>.</li>
-            <li>Thời gian làm bài: <strong>20 phút</strong>.</li>
+        <li>Thời gian làm bài: <strong>30 phút</strong>.</li>
             <li>Bạn vui lòng truy cập vào link <a href="${appUrl}">${appUrl}</a> để bắt đầu thi.</li>
         </ul>
 
