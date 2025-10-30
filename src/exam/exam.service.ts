@@ -215,13 +215,7 @@ export class ExamService {
     session.endTime = new Date();
     await this.examSessionRepository.save(session);
 
-    return {
-      sessionId: session.id,
-      score: parseFloat(score.toFixed(2)),
-      correctAnswers: correctCount,
-      totalQuestions: session.totalQuestions,
-      details,
-    };
+    return;
   }
 
   async getHistory(userId: string) {
