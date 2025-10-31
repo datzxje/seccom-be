@@ -152,7 +152,7 @@ export class ExamService {
       throw new BadRequestException('Bài thi đã được nộp trước đó');
     }
 
-    // Check if session has expired (more than 20 minutes)
+    // Check if session has expired (more than 30 minutes)
     const now = new Date();
     const sessionStart = new Date(session.startTime);
     const elapsedMinutes = (now.getTime() - sessionStart.getTime()) / (1000 * 60);
@@ -161,30 +161,40 @@ export class ExamService {
       throw new BadRequestException('Phiên thi đã hết hạn (quá 30 phút). Không thể nộp bài.');
     }
 
-    // Grade exam
+    const questionIds = answers.map((answer) => answer.questionId);
+    const questions = await this.questionRepository
+      .createQueryBuilder('question')
+      .leftJoinAndSelect('question.answers', 'answers')
+      .where('question.id IN (:...ids)', { ids: questionIds })
+      .getMany();
+
+    const questionMap = new Map(
+      questions.map((q) => [
+        q.id,
+        {
+          question: q,
+          correctAnswerId: q.answers.find((a) => a.isCorrect)?.id || null,
+        },
+      ]),
+    );
+
     let correctCount = 0;
     const examAnswers: ExamAnswer[] = [];
-    const details: any[] = [];
 
     for (const userAnswer of answers) {
-      // Get question with correct answer
-      const question = await this.questionRepository.findOne({
-        where: { id: userAnswer.questionId },
-        relations: ['answers'],
-      });
+      const questionData = questionMap.get(userAnswer.questionId);
 
-      if (!question) {
+      if (!questionData) {
         continue; // Skip invalid question
       }
 
-      const correctAnswer = question.answers.find((a) => a.isCorrect);
-      const isCorrect = userAnswer.answerId === correctAnswer?.id;
+      const isCorrect = userAnswer.answerId === questionData.correctAnswerId;
 
       if (isCorrect) {
         correctCount++;
       }
 
-      // Save exam answer
+      // Create exam answer
       const examAnswer = this.examAnswerRepository.create({
         examSessionId: sessionId,
         questionId: userAnswer.questionId,
@@ -192,30 +202,27 @@ export class ExamService {
         isCorrect,
       });
       examAnswers.push(examAnswer);
-
-      // Add to details
-      details.push({
-        questionId: userAnswer.questionId,
-        selectedAnswerId: userAnswer.answerId,
-        correctAnswerId: correctAnswer?.id,
-        isCorrect,
-      });
     }
 
-    // Save all exam answers
-    await this.examAnswerRepository.save(examAnswers);
 
-    // Calculate score
     const score = (correctCount / session.totalQuestions) * 100;
+    await this.examSessionRepository.manager.transaction(async (transactionalEntityManager) => {
+      await transactionalEntityManager.save(ExamAnswer, examAnswers);
+      session.correctAnswers = correctCount;
+      session.score = score;
+      session.status = ExamStatus.COMPLETED;
+      session.endTime = new Date();
+      await transactionalEntityManager.save(ExamSession, session);
+    });
 
-    // Update session
-    session.correctAnswers = correctCount;
-    session.score = score;
-    session.status = ExamStatus.COMPLETED;
-    session.endTime = new Date();
-    await this.examSessionRepository.save(session);
-
-    return;
+    return {
+      success: true,
+      sessionId: session.id,
+      score: parseFloat(score.toFixed(2)),
+      correctAnswers: correctCount,
+      totalQuestions: session.totalQuestions,
+      endTime: session.endTime,
+    };
   }
 
   async getHistory(userId: string) {
