@@ -35,6 +35,12 @@ import { ExamAnswer } from './exam/entities/exam-answer.entity';
             synchronize: !isProduction,
             logging: !isProduction,
             ssl: isProduction ? { rejectUnauthorized: false } : false,
+            extra: {
+              max: 20, // Maximum pool size
+              min: 5, // Minimum pool size
+              idleTimeoutMillis: 30000, // Close idle connections after 30 seconds
+              connectionTimeoutMillis: 10000, // Timeout when acquiring connection
+            },
           };
         }
 
@@ -50,6 +56,12 @@ import { ExamAnswer } from './exam/entities/exam-answer.entity';
           synchronize: !isProduction,
           logging: !isProduction,
           ssl: isProduction ? { rejectUnauthorized: false } : false,
+          extra: {
+            max: 20, // Maximum pool size
+            min: 5, // Minimum pool size
+            idleTimeoutMillis: 30000, // Close idle connections after 30 seconds
+            connectionTimeoutMillis: 10000, // Timeout when acquiring connection
+          },
         };
       },
       inject: [ConfigService],
