@@ -115,11 +115,25 @@ export class EmailService {
             padding: 20px;
         }
         .header {
-            background-color: #0066cc;
-            color: white;
-            padding: 20px;
             text-align: center;
             margin-bottom: 20px;
+            position: relative;
+        }
+        .header img {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+        .header-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-size: 24px;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            width: 90%;
         }
         .content {
             background-color: #f9f9f9;
@@ -169,7 +183,7 @@ export class EmailService {
 </head>
 <body>
     <div class="header">
-        <h2>Đăng ký thành công Vòng 1 - Test Online</h2>
+        <img src="https://res.cloudinary.com/dpyudspxg/image/upload/v1761920406/mail_bg_i7qfut.png" alt="Header">
     </div>
 
     <div class="content">
