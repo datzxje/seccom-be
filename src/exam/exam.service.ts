@@ -4,7 +4,7 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, In } from 'typeorm';
 import { ExamSession, ExamStatus } from './entities/exam-session.entity';
 import { ExamAnswer } from './entities/exam-answer.entity';
 import { Question } from '../question/entities/question.entity';
@@ -161,61 +161,103 @@ export class ExamService {
       throw new BadRequestException('Phiên thi đã hết hạn (quá 30 phút). Không thể nộp bài.');
     }
 
-    // Grade exam
-    let correctCount = 0;
-    const examAnswers: ExamAnswer[] = [];
-    const details: any[] = [];
+    const examAnswersToInsert = answers.map((userAnswer) => ({
+      examSessionId: sessionId,
+      questionId: userAnswer.questionId,
+      selectedAnswerId: userAnswer.answerId,
+      isCorrect: false,
+      createdAt: new Date(),
+    }));
 
-    for (const userAnswer of answers) {
-      // Get question with correct answer
-      const question = await this.questionRepository.findOne({
-        where: { id: userAnswer.questionId },
-        relations: ['answers'],
-      });
+    await this.examAnswerRepository.insert(examAnswersToInsert);
 
-      if (!question) {
-        continue; // Skip invalid question
+    session.status = ExamStatus.COMPLETED;
+    session.endTime = new Date();
+    await this.examSessionRepository.save(session);
+
+    setImmediate(async () => {
+      try {
+        await this.gradeExamSession(sessionId, session.totalQuestions);
+      } catch (error) {
+        console.error(`Error grading exam session ${sessionId}:`, error);
       }
+    });
 
-      const correctAnswer = question.answers.find((a) => a.isCorrect);
-      const isCorrect = userAnswer.answerId === correctAnswer?.id;
+    return;
+  }
+
+  private async gradeExamSession(sessionId: string, totalQuestions: number): Promise<void> {
+    const examAnswers = await this.examAnswerRepository.find({
+      where: { examSessionId: sessionId },
+    });
+
+    if (examAnswers.length === 0) {
+      return;
+    }
+
+    const questionIds = [...new Set(examAnswers.map((a) => a.questionId))];
+
+    const questions = await this.questionRepository.find({
+      where: { id: In(questionIds) },
+      relations: ['answers'],
+    });
+
+    const questionMap = new Map(
+      questions.map((q) => [
+        q.id,
+        q.answers.find((a) => a.isCorrect)?.id,
+      ]),
+    );
+
+    let correctCount = 0;
+    const updates: Array<{ id: string; isCorrect: boolean }> = [];
+
+    for (const examAnswer of examAnswers) {
+      const correctAnswerId = questionMap.get(examAnswer.questionId);
+      const isCorrect = examAnswer.selectedAnswerId === correctAnswerId;
 
       if (isCorrect) {
         correctCount++;
       }
 
-      // Save exam answer
-      const examAnswer = this.examAnswerRepository.create({
-        examSessionId: sessionId,
-        questionId: userAnswer.questionId,
-        selectedAnswerId: userAnswer.answerId,
-        isCorrect,
-      });
-      examAnswers.push(examAnswer);
-
-      // Add to details
-      details.push({
-        questionId: userAnswer.questionId,
-        selectedAnswerId: userAnswer.answerId,
-        correctAnswerId: correctAnswer?.id,
-        isCorrect,
-      });
+      if (examAnswer.isCorrect !== isCorrect) {
+        updates.push({ id: examAnswer.id, isCorrect });
+      }
     }
 
-    // Save all exam answers
-    await this.examAnswerRepository.save(examAnswers);
+    if (updates.length > 0) {
+      const correctIds = updates
+        .filter((u) => u.isCorrect)
+        .map((u) => u.id);
+      const incorrectIds = updates
+        .filter((u) => !u.isCorrect)
+        .map((u) => u.id);
 
-    // Calculate score
-    const score = (correctCount / session.totalQuestions) * 100;
+      if (correctIds.length > 0) {
+        await this.examAnswerRepository
+          .createQueryBuilder()
+          .update(ExamAnswer)
+          .set({ isCorrect: true })
+          .where('id IN (:...ids)', { ids: correctIds })
+          .execute();
+      }
 
-    // Update session
-    session.correctAnswers = correctCount;
-    session.score = score;
-    session.status = ExamStatus.COMPLETED;
-    session.endTime = new Date();
-    await this.examSessionRepository.save(session);
+      if (incorrectIds.length > 0) {
+        await this.examAnswerRepository
+          .createQueryBuilder()
+          .update(ExamAnswer)
+          .set({ isCorrect: false })
+          .where('id IN (:...ids)', { ids: incorrectIds })
+          .execute();
+      }
+    }
 
-    return;
+    const score = (correctCount / totalQuestions) * 100;
+
+    await this.examSessionRepository.update(sessionId, {
+      correctAnswers: correctCount,
+      score,
+    });
   }
 
   async getHistory(userId: string) {
@@ -278,46 +320,18 @@ export class ExamService {
     return shuffled;
   }
 
-  /**
-   * Auto-submit expired session (after 20 minutes)
-   * Grade only the answers that were submitted before expiration
-   */
   private async autoSubmitExpiredSession(session: ExamSession): Promise<void> {
-    // Get all answers submitted for this session
-    const submittedAnswers = await this.examAnswerRepository.find({
-      where: { examSessionId: session.id },
-    });
-
-    let correctCount = 0;
-
-    // Grade only submitted answers
-    for (const examAnswer of submittedAnswers) {
-      const question = await this.questionRepository.findOne({
-        where: { id: examAnswer.questionId },
-        relations: ['answers'],
-      });
-
-      if (question) {
-        const correctAnswer = question.answers.find((a) => a.isCorrect);
-        const isCorrect = examAnswer.selectedAnswerId === correctAnswer?.id;
-
-        // Update answer correctness
-        examAnswer.isCorrect = isCorrect;
-        if (isCorrect) correctCount++;
-
-        await this.examAnswerRepository.save(examAnswer);
-      }
-    }
-
-    // Calculate score based on submitted answers
-    const score = (correctCount / session.totalQuestions) * 100;
-
-    // Update session
-    session.correctAnswers = correctCount;
-    session.score = score;
     session.status = ExamStatus.COMPLETED;
     session.endTime = new Date();
-
+    
     await this.examSessionRepository.save(session);
+
+    setImmediate(async () => {
+      try {
+        await this.gradeExamSession(session.id, session.totalQuestions);
+      } catch (error) {
+        console.error(`Error grading expired exam session ${session.id}:`, error);
+      }
+    });
   }
 }
